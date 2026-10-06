@@ -36,6 +36,8 @@ CREATE TABLE eval_span_cursors (
     produced_through_id INTEGER DEFAULT '0' NOT NULL,
     observed_high_water_id INTEGER,
     observed_at TIMESTAMP,
+    overflowed_through_id INTEGER,
+    overflowed_counts JSONB DEFAULT '{}' NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT pk_eval_span_cursors PRIMARY KEY (id)
@@ -1358,6 +1360,7 @@ CHECK (status IN (
             'FAILED',
             'EXPIRED',
             'DROPPED',
+            'OVERFLOWED',
             'CONTENT_LOST',
             'FILTERED_OUT',
             'SAMPLED_OUT'
@@ -1393,8 +1396,9 @@ CREATE INDEX ix_eval_session_work_units_project_evaluator_failed ON eval_session
     WHERE status IN ('FAILED', 'EXPIRED');
 CREATE INDEX ix_eval_session_work_units_project_evaluator_id ON eval_session_work_units
     (project_evaluator_id);
-CREATE INDEX ix_eval_session_work_units_terminal ON eval_session_work_units (updated_at)
-    WHERE status IN ('DONE', 'FAILED', 'EXPIRED', 'DROPPED', 'CONTENT_LOST');
+CREATE INDEX ix_eval_session_work_units_terminal ON eval_session_work_units
+    (status, updated_at)
+    WHERE status IN ('DONE', 'FAILED', 'EXPIRED', 'DROPPED', 'OVERFLOWED', 'CONTENT_LOST');
 
 
 -- Table: eval_trace_work_units
@@ -1414,6 +1418,7 @@ CHECK (status IN (
             'FAILED',
             'EXPIRED',
             'DROPPED',
+            'OVERFLOWED',
             'CONTENT_LOST',
             'FILTERED_OUT',
             'SAMPLED_OUT'
@@ -1448,8 +1453,9 @@ CREATE INDEX ix_eval_trace_work_units_project_evaluator_failed ON eval_trace_wor
     WHERE status IN ('FAILED', 'EXPIRED');
 CREATE INDEX ix_eval_trace_work_units_project_evaluator_id ON eval_trace_work_units
     (project_evaluator_id);
-CREATE INDEX ix_eval_trace_work_units_terminal ON eval_trace_work_units (updated_at)
-    WHERE status IN ('DONE', 'FAILED', 'EXPIRED', 'DROPPED', 'CONTENT_LOST');
+CREATE INDEX ix_eval_trace_work_units_terminal ON eval_trace_work_units
+    (status, updated_at)
+    WHERE status IN ('DONE', 'FAILED', 'EXPIRED', 'DROPPED', 'OVERFLOWED', 'CONTENT_LOST');
 
 
 -- Table: eval_work_units

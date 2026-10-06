@@ -37,6 +37,8 @@ CREATE TABLE public.eval_span_cursors (
     produced_through_id BIGINT NOT NULL DEFAULT '0'::bigint,
     observed_high_water_id BIGINT,
     observed_at TIMESTAMP WITH TIME ZONE,
+    overflowed_through_id BIGINT,
+    overflowed_counts JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     CONSTRAINT pk_eval_span_cursors PRIMARY KEY (id),
@@ -1454,6 +1456,7 @@ CREATE TABLE public.eval_session_work_units (
             'FAILED'::character varying,
             'EXPIRED'::character varying,
             'DROPPED'::character varying,
+            'OVERFLOWED'::character varying,
             'CONTENT_LOST'::character varying,
             'FILTERED_OUT'::character varying,
             'SAMPLED_OUT'::character varying
@@ -1477,7 +1480,7 @@ CREATE INDEX ix_eval_session_work_units_project_evaluator_failed ON public.eval_
 CREATE INDEX ix_eval_session_work_units_project_evaluator_id ON public.eval_session_work_units
     USING btree (project_evaluator_id);
 CREATE INDEX ix_eval_session_work_units_terminal ON public.eval_session_work_units
-    USING btree (updated_at) WHERE ((status)::text = ANY ((ARRAY['DONE'::character varying, 'FAILED'::character varying, 'EXPIRED'::character varying, 'DROPPED'::character varying, 'CONTENT_LOST'::character varying])::text[]));
+    USING btree (status, updated_at) WHERE ((status)::text = ANY ((ARRAY['DONE'::character varying, 'FAILED'::character varying, 'EXPIRED'::character varying, 'DROPPED'::character varying, 'OVERFLOWED'::character varying, 'CONTENT_LOST'::character varying])::text[]));
 
 
 -- Table: eval_trace_work_units
@@ -1507,6 +1510,7 @@ CREATE TABLE public.eval_trace_work_units (
             'FAILED'::character varying,
             'EXPIRED'::character varying,
             'DROPPED'::character varying,
+            'OVERFLOWED'::character varying,
             'CONTENT_LOST'::character varying,
             'FILTERED_OUT'::character varying,
             'SAMPLED_OUT'::character varying
@@ -1530,7 +1534,7 @@ CREATE INDEX ix_eval_trace_work_units_project_evaluator_failed ON public.eval_tr
 CREATE INDEX ix_eval_trace_work_units_project_evaluator_id ON public.eval_trace_work_units
     USING btree (project_evaluator_id);
 CREATE INDEX ix_eval_trace_work_units_terminal ON public.eval_trace_work_units
-    USING btree (updated_at) WHERE ((status)::text = ANY ((ARRAY['DONE'::character varying, 'FAILED'::character varying, 'EXPIRED'::character varying, 'DROPPED'::character varying, 'CONTENT_LOST'::character varying])::text[]));
+    USING btree (status, updated_at) WHERE ((status)::text = ANY ((ARRAY['DONE'::character varying, 'FAILED'::character varying, 'EXPIRED'::character varying, 'DROPPED'::character varying, 'OVERFLOWED'::character varying, 'CONTENT_LOST'::character varying])::text[]));
 
 
 -- Table: eval_work_units
