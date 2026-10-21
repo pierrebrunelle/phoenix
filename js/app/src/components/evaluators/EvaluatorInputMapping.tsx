@@ -42,6 +42,8 @@ function unescapeMapping<T>(mapping: Record<string, T>): Record<string, T> {
   return result;
 }
 
+const NO_DESCRIPTIONS: Record<string, string> = {};
+
 export const EvaluatorInputMapping = () => {
   return (
     <EvaluatorInputMappingTitle>
@@ -102,7 +104,8 @@ export const useEvaluatorInputMappingControlsForm = ({
       ? filterInitialMapping(store.getState().evaluator.inputMapping)
       : store.getState().evaluator.inputMapping
   );
-  const { pathMapping, literalMapping } = initialInputMappingRef.current;
+  const { pathMapping, literalMapping, descriptions } =
+    initialInputMappingRef.current;
   // Escape keys for react-hook-form to prevent dots from being interpreted as nested paths
   const escapedPathMapping = useMemo(
     // eslint-disable-next-line react/refs
@@ -114,10 +117,16 @@ export const useEvaluatorInputMappingControlsForm = ({
     () => escapeMapping(literalMapping),
     [literalMapping]
   );
+  const escapedDescriptions = useMemo(
+    // eslint-disable-next-line react/refs
+    () => escapeMapping(descriptions ?? NO_DESCRIPTIONS),
+    [descriptions]
+  );
   const form = useForm({
     defaultValues: {
       pathMapping: escapedPathMapping,
       literalMapping: escapedLiteralMapping,
+      descriptions: escapedDescriptions,
     },
     mode: "onChange",
   });
@@ -135,11 +144,14 @@ export const useEvaluatorInputMappingControlsForm = ({
     ({
       pathMapping,
       literalMapping,
+      descriptions,
     }: {
       pathMapping: Record<string, string>;
       literalMapping: EvaluatorInputMappingValue["literalMapping"];
+      descriptions?: Record<string, string>;
     }) => {
-      const { setPathMapping, setLiteralMapping } = store.getState();
+      const { setPathMapping, setLiteralMapping, setInputMappingDescriptions } =
+        store.getState();
       const write = <T,>(mapping: Record<string, T>) => {
         const unescaped = unescapeMapping(mapping);
         const pruned = pruneEmptyEntries ? pruneEmpty(unescaped) : unescaped;
@@ -159,6 +171,9 @@ export const useEvaluatorInputMappingControlsForm = ({
             )
           : literals
       );
+      // Kept in the form for every variable ever described, so a variable
+      // that comes back brings its description back with it.
+      setInputMappingDescriptions(write(descriptions ?? {}));
     },
     [store, pruneEmptyEntries, declaredNames, pathsReplaceLiterals]
   );

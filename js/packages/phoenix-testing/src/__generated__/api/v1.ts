@@ -4287,6 +4287,10 @@ export interface components {
             path_mapping: {
                 [key: string]: string;
             };
+            /** Descriptions */
+            descriptions?: {
+                [key: string]: string;
+            };
         };
         /** InsertedSessionAnnotation */
         InsertedSessionAnnotation: {

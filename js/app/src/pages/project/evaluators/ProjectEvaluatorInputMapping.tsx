@@ -1,6 +1,8 @@
 import { css } from "@emotion/react";
 import type { ReactNode } from "react";
+import { useWatch } from "react-hook-form";
 
+import { EvaluatorInputDescriptionEditor } from "@phoenix/components/evaluators/EvaluatorInputDescriptionEditor";
 import { useEvaluatorInputMappingControlsForm } from "@phoenix/components/evaluators/EvaluatorInputMapping";
 import { useEvaluatorInputVariables } from "@phoenix/components/evaluators/EvaluatorInputVariablesContext/useEvaluatorInputVariables";
 import { EvaluatorPathField } from "@phoenix/components/evaluators/EvaluatorPathField";
@@ -25,6 +27,9 @@ import {
  * `input`, `output`, and `metadata` read their matching context fields when
  * left blank. Other variables need a path unless they are optional code
  * parameters or already have a saved text binding.
+ *
+ * Each variable can also carry a description of what it should hold, edited
+ * from a link under its name and shown under its path.
  */
 export const ProjectEvaluatorInputMapping = ({
   recordKind,
@@ -57,6 +62,7 @@ export const ProjectEvaluatorInputMapping = ({
       pathsReplaceLiterals: true,
     }
   );
+  const descriptions = useWatch({ control, name: "descriptions" });
   const evaluatorMappingSource = useEvaluatorStore(
     (state) => state.evaluatorMappingSource
   );
@@ -76,55 +82,72 @@ export const ProjectEvaluatorInputMapping = ({
       css={mappingRowsCSS}
       data-columns={variables.length >= TWO_COLUMN_MIN_VARIABLES ? "2" : "1"}
     >
-      {variables.map((variable) => (
-        <div key={variable} className="mapping-row">
-          {/* The path field is a CodeMirror editor and takes its accessible
-              name from the control itself, so this is a visual label only. */}
-          <code className="mapping-row__name" aria-hidden title={variable}>
-            {variable}
-          </code>
-          <div className="mapping-row__field">
-            <SwitchableEvaluatorInput
-              fieldName={escapeFieldNameForReactHookForm(variable)}
-              label={variable}
-              hideLabel
-              size="S"
-              control={control}
-              getValues={getValues}
-              setValue={setValue}
-              pathOptions={[]}
-              allowsLiteral={false}
-              renderPathInput={({
-                value,
-                onChange,
-                isInvalid,
-                errorMessage,
-                ariaLabel,
-              }) => (
-                <EvaluatorPathField
-                  value={value}
-                  onChange={onChange}
-                  isInvalid={isInvalid}
-                  errorMessage={errorMessage}
-                  ariaLabel={ariaLabel}
-                  evaluatorMappingSource={evaluatorMappingSource}
-                  recordKind={recordKind}
-                  onFocusChange={(isFocused) =>
-                    setFocusedMappingVariable(isFocused ? variable : null)
-                  }
-                  placeholder={getEvaluatorInputPlaceholder({
-                    variableName: variable,
-                    isRequired: requiredVariables?.includes(variable) ?? true,
-                    literal: Object.hasOwn(literalMapping, variable)
-                      ? literalMapping[variable]
-                      : undefined,
-                  })}
-                />
-              )}
-            />
+      {variables.map((variable) => {
+        const fieldName = escapeFieldNameForReactHookForm(variable);
+        const description = descriptions?.[fieldName] ?? "";
+        return (
+          <div key={variable} className="mapping-row">
+            <div className="mapping-row__label">
+              {/* The path field is a CodeMirror editor and takes its accessible
+                name from the control itself, so this is a visual label only. */}
+              <code className="mapping-row__name" aria-hidden title={variable}>
+                {variable}
+              </code>
+              <EvaluatorInputDescriptionEditor
+                inputName={variable}
+                description={description}
+                onSave={(text) =>
+                  setValue(`descriptions.${fieldName}`, text, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              />
+            </div>
+            <div className="mapping-row__field">
+              <SwitchableEvaluatorInput
+                fieldName={fieldName}
+                label={variable}
+                description={description || undefined}
+                hideLabel
+                size="S"
+                control={control}
+                getValues={getValues}
+                setValue={setValue}
+                pathOptions={[]}
+                allowsLiteral={false}
+                renderPathInput={({
+                  value,
+                  onChange,
+                  isInvalid,
+                  errorMessage,
+                  ariaLabel,
+                }) => (
+                  <EvaluatorPathField
+                    value={value}
+                    onChange={onChange}
+                    isInvalid={isInvalid}
+                    errorMessage={errorMessage}
+                    ariaLabel={ariaLabel}
+                    evaluatorMappingSource={evaluatorMappingSource}
+                    recordKind={recordKind}
+                    onFocusChange={(isFocused) =>
+                      setFocusedMappingVariable(isFocused ? variable : null)
+                    }
+                    placeholder={getEvaluatorInputPlaceholder({
+                      variableName: variable,
+                      isRequired: requiredVariables?.includes(variable) ?? true,
+                      literal: Object.hasOwn(literalMapping, variable)
+                        ? literalMapping[variable]
+                        : undefined,
+                    })}
+                  />
+                )}
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -146,8 +169,15 @@ const mappingRowsCSS = css`
   .mapping-row {
     display: grid;
     grid-template-columns: minmax(72px, 160px) minmax(0, 1fr);
-    align-items: center;
+    align-items: start;
     gap: var(--global-dimension-size-150);
+  }
+  .mapping-row__label {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    max-width: 100%;
   }
   .mapping-row__name {
     font-family: var(--global-font-family-code, monospace);

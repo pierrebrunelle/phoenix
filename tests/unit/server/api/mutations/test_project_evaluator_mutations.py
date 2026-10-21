@@ -883,6 +883,98 @@ async def test_project_llm_evaluator_create_update_delete(
     assert delete_result.data and not delete_result.errors
 
 
+_DESCRIBED_FIELDS = """
+id
+inputMapping { literalMapping pathMapping descriptions }
+evaluator {
+  ... on LLMEvaluator { projectEvaluators { id inputMapping { descriptions } } }
+}
+"""
+
+_CREATE_DESCRIBED_LLM = f"""
+mutation($input: CreateProjectLLMEvaluatorInput!) {{
+  createProjectLlmEvaluator(input: $input) {{ evaluator {{ {_DESCRIBED_FIELDS} }} }}
+}}
+"""
+
+_UPDATE_DESCRIBED_LLM = f"""
+mutation($input: UpdateProjectLLMEvaluatorInput!) {{
+  updateProjectLlmEvaluator(input: $input) {{ evaluator {{ {_DESCRIBED_FIELDS} }} }}
+}}
+"""
+
+
+async def test_project_llm_evaluator_input_descriptions_round_trip(
+    gql_client: AsyncGraphQLClient,
+    db: DbSessionFactory,
+) -> None:
+    project = await _add_project(db)
+    create_input = _llm_input(project, name="described-llm", text="Evaluate {{input}}")
+    create_input["inputMapping"] = {
+        "literalMapping": {},
+        "pathMapping": {"input": "input"},
+        "descriptions": {"input": "The user's question."},
+    }
+    create_result = await gql_client.execute(_CREATE_DESCRIBED_LLM, {"input": create_input})
+    assert create_result.data and not create_result.errors
+    created = create_result.data["createProjectLlmEvaluator"]["evaluator"]
+    assert created["inputMapping"]["descriptions"] == {"input": "The user's question."}
+    assert created["evaluator"]["projectEvaluators"] == [
+        {"id": created["id"], "inputMapping": {"descriptions": {"input": "The user's question."}}}
+    ]
+
+    update_input = _llm_input(project, name="described-llm", text="Evaluate {{input}}")
+    update_input.pop("projectId")
+    update_input.pop("enabled")
+    update_input["projectEvaluatorId"] = created["id"]
+    update_input["inputMapping"] = {
+        "literalMapping": {},
+        "pathMapping": {},
+        "descriptions": {"input": "The conversation so far."},
+    }
+    update_result = await gql_client.execute(_UPDATE_DESCRIBED_LLM, {"input": update_input})
+    assert update_result.data and not update_result.errors
+    updated = update_result.data["updateProjectLlmEvaluator"]["evaluator"]
+    assert updated["inputMapping"]["descriptions"] == {"input": "The conversation so far."}
+
+    # A mapping sent without descriptions clears them, and nothing extra is stored.
+    update_input["inputMapping"] = _mapping()
+    cleared_result = await gql_client.execute(_UPDATE_DESCRIBED_LLM, {"input": update_input})
+    assert cleared_result.data and not cleared_result.errors
+    cleared = cleared_result.data["updateProjectLlmEvaluator"]["evaluator"]
+    assert cleared["inputMapping"]["descriptions"] == {}
+    project_evaluator_id = int(GlobalID.from_id(created["id"]).node_id)
+    async with db() as session:
+        stored = await session.scalar(
+            select(models.ProjectEvaluator.__table__.c.input_mapping).where(
+                models.ProjectEvaluator.__table__.c.id == project_evaluator_id
+            )
+        )
+    assert "descriptions" not in stored
+
+
+@pytest.mark.parametrize(
+    "descriptions",
+    [
+        pytest.param(["input"], id="not-a-map"),
+        pytest.param({"input": 1}, id="non-string-description"),
+        pytest.param({" ": "blank name"}, id="blank-name"),
+    ],
+)
+async def test_project_llm_evaluator_rejects_malformed_input_descriptions(
+    gql_client: AsyncGraphQLClient,
+    db: DbSessionFactory,
+    descriptions: Any,
+) -> None:
+    project = await _add_project(db)
+    create_input = _llm_input(project, name="malformed-llm", text="Evaluate {{input}}")
+    create_input["inputMapping"] = {**_mapping(), "descriptions": descriptions}
+    result = await gql_client.execute(_CREATE_DESCRIBED_LLM, {"input": create_input})
+    assert result.errors
+    async with db() as session:
+        assert await session.scalar(select(func.count(models.ProjectEvaluator.id))) == 0
+
+
 async def test_project_evaluators_filters_by_name(
     gql_client: AsyncGraphQLClient,
     db: DbSessionFactory,

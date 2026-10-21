@@ -619,6 +619,11 @@ type BuiltInEvaluator implements Evaluator & Node {
   datasets(first: Int = 50, after: String): DatasetConnection!
   projects(first: Int = 50, after: String): ProjectConnection!
   datasetEvaluators: [DatasetEvaluator!]!
+
+  """
+  The project evaluators that run this evaluator, most recently updated first.
+  """
+  projectEvaluators: [ProjectEvaluator!]!
   inputSchema: JSON
   user: User
 }
@@ -834,6 +839,11 @@ type CodeEvaluator implements Evaluator & Node {
   datasets(first: Int = 50, after: String): DatasetConnection!
   projects(first: Int = 50, after: String): ProjectConnection!
   datasetEvaluators: [DatasetEvaluator!]!
+
+  """
+  The project evaluators that run this evaluator, most recently updated first.
+  """
+  projectEvaluators: [ProjectEvaluator!]!
   sandboxConfig: SandboxConfig
   inputMapping: EvaluatorInputMapping!
   currentVersion: CodeEvaluatorVersion
@@ -1898,6 +1908,11 @@ type DecisionEvaluator implements Evaluator & Node {
   datasets(first: Int = 50, after: String): DatasetConnection!
   projects(first: Int = 50, after: String): ProjectConnection!
   datasetEvaluators: [DatasetEvaluator!]!
+
+  """
+  The project evaluators that run this evaluator, most recently updated first.
+  """
+  projectEvaluators: [ProjectEvaluator!]!
   user: User
   inputSchema: JSON!
   scoringPolicy: DecisionScoringPolicy!
@@ -2798,6 +2813,11 @@ interface Evaluator implements Node {
   datasets(first: Int = 50, after: String): DatasetConnection!
   projects(first: Int = 50, after: String): ProjectConnection!
   datasetEvaluators: [DatasetEvaluator!]!
+
+  """
+  The project evaluators that run this evaluator, most recently updated first.
+  """
+  projectEvaluators: [ProjectEvaluator!]!
 }
 
 type EvaluatorAnnotationScoreMetrics {
@@ -2989,11 +3009,13 @@ type EvaluatorInput {
 type EvaluatorInputMapping {
   literalMapping: JSON!
   pathMapping: JSON!
+  descriptions: JSON!
 }
 
 input EvaluatorInputMappingInput {
   literalMapping: JSON!
   pathMapping: JSON!
+  descriptions: JSON = null
 }
 
 enum EvaluatorKind {
@@ -3909,6 +3931,11 @@ type LLMEvaluator implements Evaluator & Node {
   datasets(first: Int = 50, after: String): DatasetConnection!
   projects(first: Int = 50, after: String): ProjectConnection!
   datasetEvaluators: [DatasetEvaluator!]!
+
+  """
+  The project evaluators that run this evaluator, most recently updated first.
+  """
+  projectEvaluators: [ProjectEvaluator!]!
   prompt: Prompt!
   promptVersionTag: PromptVersionTag
   inputSchema: JSON!

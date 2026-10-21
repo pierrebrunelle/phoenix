@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<53ae9031ecace8d3ca2e6d59fca7520c>>
+ * @generated SignedSource<<5247261bd2c809343ef8e52542fa2156>>
  * @lightSyntaxTransform
  */
 
@@ -51,6 +51,7 @@ export type PromptTemplateOptions = {
   variables: any;
 };
 export type EvaluatorInputMappingInput = {
+  descriptions?: any | null;
   literalMapping: any;
   pathMapping: any;
 };

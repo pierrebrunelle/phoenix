@@ -738,7 +738,7 @@ class _InputMapping(TypeDecorator[InputMapping]):
     ) -> Optional[dict[str, Any]]:
         if value is None:
             raise ValueError("Input mapping cannot be None")
-        return value.model_dump()
+        return value.model_dump(exclude_defaults=True)
 
     def process_result_value(self, value: Optional[dict[str, Any]], _: Dialect) -> InputMapping:
         if value is None:
@@ -755,7 +755,7 @@ class _OptionalInputMapping(TypeDecorator[Optional[InputMapping]]):
     ) -> Optional[dict[str, Any]]:
         if value is None:
             return None
-        return value.model_dump()
+        return value.model_dump(exclude_defaults=True)
 
     def process_result_value(
         self, value: Optional[dict[str, Any]], _: Dialect

@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<c175782b7a714b56c1826a2d4b4ba258>>
+ * @generated SignedSource<<8c3d5157734c170cb57eb373741511d9>>
  * @lightSyntaxTransform
  */
 
@@ -424,6 +424,7 @@ export type InlineCodeEvaluatorInput = {
   sourceCode: string;
 };
 export type EvaluatorInputMappingInput = {
+  descriptions?: any | null;
   literalMapping: any;
   pathMapping: any;
 };

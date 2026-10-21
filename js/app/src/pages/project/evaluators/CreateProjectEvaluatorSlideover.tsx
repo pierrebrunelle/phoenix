@@ -72,6 +72,8 @@ type SeededLlmEvaluatorInitialState = {
   defaultMessages: PlaygroundChatTemplate["messages"];
   templateFormat: TemplateFormat;
   includeExplanation: boolean;
+  /** What each prompt variable should hold, keyed by variable name. */
+  inputDescriptions: Record<string, string>;
 };
 
 type CopiedLlmEvaluatorInitialState = SeededLlmEvaluatorInitialState & {
@@ -281,10 +283,13 @@ const CreateProjectEvaluatorDialog = ({
         inputMapping:
           creationMode.kind === "code"
             ? creationMode.inputMapping
-            : (templateState?.inputMapping ?? {
-                pathMapping: {},
-                literalMapping: {},
-              }),
+            : {
+                ...(templateState?.inputMapping ?? {
+                  pathMapping: {},
+                  literalMapping: {},
+                }),
+                descriptions: seededState?.inputDescriptions ?? {},
+              },
         kind: creationMode.kind === "code" ? "CODE" : "LLM",
         includeExplanation:
           seededState?.includeExplanation ??

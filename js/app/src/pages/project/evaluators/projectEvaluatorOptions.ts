@@ -49,6 +49,11 @@ const llmProjectEvaluatorDetailsFragment = graphql`
     description
     kind
     llmInputSchema: inputSchema
+    projectEvaluators {
+      inputMapping {
+        descriptions
+      }
+    }
     outputConfigs {
       __typename
       ... on CategoricalAnnotationConfig {
@@ -144,6 +149,7 @@ const codeProjectEvaluatorDetailsFragment = graphql`
     inputMapping {
       pathMapping
       literalMapping
+      descriptions
     }
   }
 `;
@@ -193,7 +199,10 @@ export function readProjectEvaluatorDetails(
       );
     return {
       ...details,
-      inputs: getEvaluatorInputSummaries(details.llmInputSchema),
+      inputs: withInputDescriptions({
+        inputs: getEvaluatorInputSummaries(details.llmInputSchema),
+        descriptions: getLlmEvaluatorInputDescriptions(details),
+      }),
     };
   }
   if (evaluator?.__typename === "CodeEvaluator") {
@@ -204,7 +213,10 @@ export function readProjectEvaluatorDetails(
       );
     return {
       ...details,
-      inputs: getEvaluatorInputSummaries(details.codeInputSchema),
+      inputs: withInputDescriptions({
+        inputs: getEvaluatorInputSummaries(details.codeInputSchema),
+        descriptions: parseInputDescriptions(details.inputMapping.descriptions),
+      }),
     };
   }
   return null;
@@ -225,6 +237,54 @@ export function getEvaluatorInputSummaries(
         : undefined;
     return { name, description };
   });
+}
+
+/** Input descriptions as stored in a mapping, dropping anything malformed. */
+export function parseInputDescriptions(
+  descriptions: unknown
+): Record<string, string> {
+  if (!isStringKeyedObject(descriptions)) return {};
+  return Object.fromEntries(
+    Object.entries(descriptions).filter(
+      (entry): entry is [string, string] =>
+        typeof entry[1] === "string" && entry[1].trim() !== ""
+    )
+  );
+}
+
+/**
+ * An LLM evaluator's input descriptions live on the project evaluators that
+ * run it, so they come from the most recently updated one that has any.
+ */
+export function getLlmEvaluatorInputDescriptions(evaluator: {
+  readonly projectEvaluators: ReadonlyArray<{
+    readonly inputMapping: { readonly descriptions: unknown };
+  }>;
+}): Record<string, string> {
+  for (const projectEvaluator of evaluator.projectEvaluators) {
+    const descriptions = parseInputDescriptions(
+      projectEvaluator.inputMapping.descriptions
+    );
+    if (Object.keys(descriptions).length > 0) {
+      return descriptions;
+    }
+  }
+  return {};
+}
+
+/** Overlays stored descriptions on the inputs an evaluator declares. */
+export function withInputDescriptions({
+  inputs,
+  descriptions,
+}: {
+  inputs: readonly EvaluatorInputSummary[];
+  descriptions: Record<string, string>;
+}): EvaluatorInputSummary[] {
+  return inputs.map((input) =>
+    Object.hasOwn(descriptions, input.name)
+      ? { ...input, description: descriptions[input.name] }
+      : input
+  );
 }
 
 export type BuildCopyLlmCreationModeResult =
@@ -278,6 +338,7 @@ export function buildCopyLlmCreationMode(
         includeExplanation: inferIncludeExplanationFromPrompt(
           evaluator.promptVersion?.tools
         ),
+        inputDescriptions: getLlmEvaluatorInputDescriptions(evaluator),
       },
     },
   };
@@ -307,6 +368,7 @@ export function buildAttachCodeCreationMode(
     inputMapping: {
       pathMapping: { ...evaluator.inputMapping.pathMapping },
       literalMapping: { ...evaluator.inputMapping.literalMapping },
+      descriptions: parseInputDescriptions(evaluator.inputMapping.descriptions),
     },
   };
 }
@@ -330,6 +392,9 @@ export function buildCopyCodeCreationMode(
       inputMapping: {
         pathMapping: { ...evaluator.inputMapping.pathMapping },
         literalMapping: { ...evaluator.inputMapping.literalMapping },
+        descriptions: parseInputDescriptions(
+          evaluator.inputMapping.descriptions
+        ),
       },
     },
   };

@@ -306,6 +306,7 @@ class EvaluatorTaskConfig(Node):
             input_mapping=EvaluatorInputMapping(
                 literal_mapping=JSON(obj.input_mapping.literal_mapping),
                 path_mapping=JSON(obj.input_mapping.path_mapping),
+                descriptions=JSON(obj.input_mapping.descriptions),
             ),
             output_configs=[
                 _to_gql_output_config(

@@ -88,6 +88,8 @@ export type EvaluatorStoreActions = {
   setLiteralMapping: (
     literalMapping: EvaluatorInputMapping["literalMapping"]
   ) => void;
+  /** Replaces the input descriptions, dropping empty ones. */
+  setInputMappingDescriptions: (descriptions: Record<string, string>) => void;
   /** Sets the dataset configuration for the evaluator. */
   setDataset: (dataset: EvaluatorStoreProps["dataset"]) => void;
   /** Sets the dataset ID, or clears the dataset if null. */
@@ -508,6 +510,26 @@ export const createEvaluatorStore = (
               },
               undefined,
               "setLiteralMapping"
+            );
+          },
+          setInputMappingDescriptions(descriptions) {
+            const nonEmptyDescriptions = Object.fromEntries(
+              Object.entries(descriptions).filter(
+                ([, description]) => description.trim() !== ""
+              )
+            );
+            set(
+              {
+                evaluator: {
+                  ...get().evaluator,
+                  inputMapping: {
+                    ...get().evaluator.inputMapping,
+                    descriptions: nonEmptyDescriptions,
+                  },
+                },
+              },
+              undefined,
+              "setInputMappingDescriptions"
             );
           },
           setInputMappingPath(path, value) {

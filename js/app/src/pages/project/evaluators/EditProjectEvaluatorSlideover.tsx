@@ -127,6 +127,7 @@ export function useProjectEvaluator(projectEvaluatorId: string) {
             inputMapping {
               pathMapping
               literalMapping
+              descriptions
             }
             project {
               id
@@ -195,6 +196,7 @@ export function useProjectEvaluator(projectEvaluatorId: string) {
                 inputMapping {
                   pathMapping
                   literalMapping
+                  descriptions
                 }
                 outputConfigs {
                   __typename

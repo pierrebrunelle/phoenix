@@ -2,6 +2,8 @@ import {
   buildCopyCodeCreationMode,
   buildCopyLlmCreationMode,
   getEvaluatorInputSummaries,
+  getLlmEvaluatorInputDescriptions,
+  withInputDescriptions,
   type CodeProjectEvaluatorDetails,
   type LlmProjectEvaluatorDetails,
 } from "@phoenix/pages/project/evaluators/projectEvaluatorOptions";
@@ -25,6 +27,7 @@ const codeEvaluator = {
   inputMapping: {
     pathMapping: { output: "output.value" },
     literalMapping: { threshold: 5 },
+    descriptions: { output: "The final answer.", stale: "" },
   },
   outputConfigs: [
     {
@@ -45,6 +48,10 @@ const llmEvaluator = {
   description: null,
   kind: "LLM",
   llmInputSchema: null,
+  projectEvaluators: [
+    { inputMapping: { descriptions: {} } },
+    { inputMapping: { descriptions: { output: "The response to grade." } } },
+  ],
   inputs: [],
   outputConfigs: [],
   promptVersion: {
@@ -66,6 +73,44 @@ describe("buildCopyLlmCreationMode", () => {
     expect(copyName).toBe("correctness_copy_1");
     expect(validateIdentifier(copyName)).toBe(true);
   });
+
+  it("carries the input descriptions of the evaluator's project binding", () => {
+    const built = buildCopyLlmCreationMode(llmEvaluator, []);
+    if (!built.ok) throw new Error("expected a copy");
+    expect(built.mode.initialState.inputDescriptions).toEqual({
+      output: "The response to grade.",
+    });
+  });
+});
+
+describe("getLlmEvaluatorInputDescriptions", () => {
+  it("returns nothing when no binding describes its inputs", () => {
+    expect(getLlmEvaluatorInputDescriptions({ projectEvaluators: [] })).toEqual(
+      {}
+    );
+    expect(
+      getLlmEvaluatorInputDescriptions({
+        projectEvaluators: [{ inputMapping: { descriptions: "not a map" } }],
+      })
+    ).toEqual({});
+  });
+});
+
+describe("withInputDescriptions", () => {
+  it("overlays stored descriptions on declared inputs only", () => {
+    expect(
+      withInputDescriptions({
+        inputs: [
+          { name: "input", description: "From the schema" },
+          { name: "output" },
+        ],
+        descriptions: { output: "The response", removed: "Gone" },
+      })
+    ).toEqual([
+      { name: "input", description: "From the schema" },
+      { name: "output", description: "The response" },
+    ]);
+  });
 });
 
 describe("buildCopyCodeCreationMode", () => {
@@ -83,6 +128,7 @@ describe("buildCopyCodeCreationMode", () => {
         inputMapping: {
           pathMapping: { output: "output.value" },
           literalMapping: { threshold: 5 },
+          descriptions: { output: "The final answer." },
         },
         outputConfigs: [
           {

@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<63de5756d34a181d2aa30352786f8c88>>
+ * @generated SignedSource<<17ddf9a82bf3015a5394acdcba350b65>>
  * @lightSyntaxTransform
  */
 
@@ -18,6 +18,7 @@ export type projectEvaluatorOptions_codeEvaluatorDetails$data = {
   readonly description: string | null;
   readonly id: string;
   readonly inputMapping: {
+    readonly descriptions: any;
     readonly literalMapping: any;
     readonly pathMapping: any;
   };
@@ -66,6 +67,6 @@ const node: ReaderInlineDataFragment = {
   "name": "projectEvaluatorOptions_codeEvaluatorDetails"
 };
 
-(node as any).hash = "f8acbca29ae9f38b9b1b91246145910b";
+(node as any).hash = "8e3e20d275064bd2f619c0cb0fb9ee85";
 
 export default node;

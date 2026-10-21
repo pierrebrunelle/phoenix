@@ -17409,6 +17409,13 @@
             },
             "type": "object",
             "title": "Path Mapping"
+          },
+          "descriptions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Descriptions"
           }
         },
         "additionalProperties": false,

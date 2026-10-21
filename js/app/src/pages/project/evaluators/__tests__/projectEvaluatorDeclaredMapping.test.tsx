@@ -6,6 +6,7 @@
  */
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { userEvent } from "storybook/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useEvaluatorInputMappingControlsForm } from "@phoenix/components/evaluators/EvaluatorInputMapping";
@@ -38,6 +39,11 @@ const STORED_PATHS = {
   input: "metadata.attributes.input",
 };
 
+const STORED_DESCRIPTIONS = {
+  context: "Retrieved documents.",
+  input: "The user's question.",
+};
+
 describe("a project evaluator's mapping as its variables change", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -67,7 +73,11 @@ describe("a project evaluator's mapping as its variables change", () => {
               description: "",
               isBuiltin: false,
               includeExplanation: false,
-              inputMapping: { pathMapping: STORED_PATHS, literalMapping: {} },
+              inputMapping: {
+                pathMapping: STORED_PATHS,
+                literalMapping: {},
+                descriptions: STORED_DESCRIPTIONS,
+              },
             },
           }}
         >
@@ -98,6 +108,18 @@ describe("a project evaluator's mapping as its variables change", () => {
     await render(["context", "input"]);
     expect(store!.getState().evaluator.inputMapping.pathMapping).toEqual(
       STORED_PATHS
+    );
+  });
+
+  it("drops a removed variable's description and restores it when it returns", async () => {
+    await render(["context", "input"]);
+    await render(["input"]);
+    expect(store!.getState().evaluator.inputMapping.descriptions).toEqual({
+      input: STORED_DESCRIPTIONS.input,
+    });
+    await render(["context", "input"]);
+    expect(store!.getState().evaluator.inputMapping.descriptions).toEqual(
+      STORED_DESCRIPTIONS
     );
   });
 
@@ -201,5 +223,67 @@ describe("a project evaluator's mapping as its variables change", () => {
     await renderDock(["context", "input"]);
     await renderDock([]);
     expect(store!.getState().evaluator.inputMapping.pathMapping).toEqual({});
+  });
+
+  it("shows a stored description and saves one written in the describe popover", async () => {
+    await act(async () => {
+      root.render(
+        <EvaluatorStoreProvider
+          initialState={{
+            evaluator: {
+              kind: "LLM",
+              globalName: "",
+              name: "",
+              description: "",
+              isBuiltin: false,
+              includeExplanation: false,
+              inputMapping: {
+                pathMapping: {},
+                literalMapping: {},
+                descriptions: { question: "What the user asked." },
+              },
+            },
+          }}
+        >
+          {({ store: storeInstance }) => {
+            store = storeInstance;
+            return (
+              <EvaluatorInputVariablesContext.Provider
+                value={["question", "rubric"]}
+              >
+                <ProjectEvaluatorInputMapping recordKind="span" />
+              </EvaluatorInputVariablesContext.Provider>
+            );
+          }}
+        </EvaluatorStoreProvider>
+      );
+    });
+
+    expect(container.textContent).toContain("What the user asked.");
+    expect(
+      container.querySelector(
+        'button[aria-label="Edit description for question"]'
+      )
+    ).not.toBeNull();
+    const describeRubric = container.querySelector(
+      'button[aria-label="Add description for rubric"]'
+    );
+
+    const user = userEvent.setup();
+    await act(async () => {
+      await user.click(describeRubric!);
+    });
+    const textArea = document.body.querySelector("textarea");
+    expect(textArea).not.toBeNull();
+    await act(async () => {
+      await user.type(textArea!, "  The grading rubric.  ");
+      await user.click(document.body.querySelector('button[type="submit"]')!);
+    });
+
+    expect(container.textContent).toContain("The grading rubric.");
+    expect(store!.getState().evaluator.inputMapping.descriptions).toEqual({
+      question: "What the user asked.",
+      rubric: "The grading rubric.",
+    });
   });
 });

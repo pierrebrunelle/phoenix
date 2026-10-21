@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<5e39ad8f11a22f4a62e46f1941c0e5cc>>
+ * @generated SignedSource<<88146b621d199956ccd568f6fe7bafed>>
  * @lightSyntaxTransform
  */
 
@@ -239,6 +239,7 @@ export type PlaygroundEvaluatorInput = {
   outputConfigs?: ReadonlyArray<AnnotationConfigInput> | null;
 };
 export type EvaluatorInputMappingInput = {
+  descriptions?: any | null;
   literalMapping: any;
   pathMapping: any;
 };

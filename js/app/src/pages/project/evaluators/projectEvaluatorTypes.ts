@@ -74,7 +74,9 @@ export function isSameInputMapping(
 ): boolean {
   return (
     sortedEntriesJson(a.pathMapping) === sortedEntriesJson(b.pathMapping) &&
-    sortedEntriesJson(a.literalMapping) === sortedEntriesJson(b.literalMapping)
+    sortedEntriesJson(a.literalMapping) ===
+      sortedEntriesJson(b.literalMapping) &&
+    sortedEntriesJson(a.descriptions) === sortedEntriesJson(b.descriptions)
   );
 }
 

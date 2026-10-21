@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<afceec4209db318076af6d0297fecd1e>>
+ * @generated SignedSource<<b0f7bd38eb98c9069c0e09f0c86b7daa>>
  * @lightSyntaxTransform
  */
 
@@ -45,6 +45,11 @@ export type projectEvaluatorOptions_llmEvaluatorDetails$data = {
     // value in case none of the concrete values match.
     readonly __typename: "%other";
   }>;
+  readonly projectEvaluators: ReadonlyArray<{
+    readonly inputMapping: {
+      readonly descriptions: any;
+    };
+  }>;
   readonly promptVersion: {
     readonly template: {
       readonly __typename: "PromptChatTemplate";
@@ -88,6 +93,6 @@ const node: ReaderInlineDataFragment = {
   "name": "projectEvaluatorOptions_llmEvaluatorDetails"
 };
 
-(node as any).hash = "e9490d681bf7fe3a06f782c3715dbef0";
+(node as any).hash = "dd28f150e1f06cdb0c9a31416ed45044";
 
 export default node;

@@ -18,6 +18,8 @@ class EvaluatorInputMappingInput:
     """Direct key-value mappings to evaluator inputs."""
     path_mapping: JSON
     """JSONPath expressions to extract values from the evaluation context."""
+    descriptions: Optional[JSON] = None
+    """What each evaluator input should hold, keyed by input name. Not used at run time."""
 
     def __post_init__(self) -> None:
         if not isinstance(self.path_mapping, Mapping):
@@ -31,12 +33,21 @@ class EvaluatorInputMappingInput:
                 validate_jsonpath(path)
             except ValueError as e:
                 raise BadRequest(f"Invalid JSONPath expression for key '{key}': {e}")
+        if self.descriptions is not None:
+            if not isinstance(self.descriptions, Mapping):
+                raise BadRequest("descriptions must be a dictionary")
+            for key, description in cast(Mapping[Any, Any], self.descriptions).items():
+                if not isinstance(key, str) or not key.strip():
+                    raise BadRequest("Input description names must be non-empty strings")
+                if not isinstance(description, str):
+                    raise BadRequest(f"Description for input '{key}' must be a string")
 
     def to_orm(self) -> InputMapping:
         """Convert to database InputMapping type."""
         return InputMapping(
             literal_mapping=cast(dict[str, Any], self.literal_mapping),
             path_mapping=cast(dict[str, JSONPath], self.path_mapping),
+            descriptions=cast(dict[str, str], self.descriptions or {}),
         )
 
 

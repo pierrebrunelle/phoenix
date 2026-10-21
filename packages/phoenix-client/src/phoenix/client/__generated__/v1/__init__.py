@@ -371,6 +371,7 @@ class GraphQLContext(TypedDict):
 class InputMapping(TypedDict):
     literal_mapping: Mapping[str, Any]
     path_mapping: Mapping[str, str]
+    descriptions: NotRequired[Mapping[str, str]]
 
 
 class InsertedSessionAnnotation(TypedDict):

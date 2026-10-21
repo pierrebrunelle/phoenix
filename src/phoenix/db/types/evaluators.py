@@ -121,7 +121,7 @@ from jsonpath_ng.jsonpath import (
     Slice,
 )
 from jsonpath_ng.parser import JsonPathParser
-from pydantic import AfterValidator
+from pydantic import AfterValidator, Field, field_validator
 
 from .db_helper_types import DBBaseModel
 
@@ -273,3 +273,12 @@ JSONPath = Annotated[str, AfterValidator(validate_jsonpath)]
 class InputMapping(DBBaseModel):
     literal_mapping: dict[str, Any]
     path_mapping: dict[str, JSONPath]
+    descriptions: dict[str, str] = Field(default_factory=dict)
+    """What each evaluator input should hold, keyed by input name. Not used at run time."""
+
+    @field_validator("descriptions")
+    @classmethod
+    def _input_names_must_not_be_empty(cls, descriptions: dict[str, str]) -> dict[str, str]:
+        if any(not name.strip() for name in descriptions):
+            raise ValueError("input description names must not be empty")
+        return descriptions

@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<b5b7b747c8df391785012d2593ab0467>>
+ * @generated SignedSource<<4a54fa0406bac596270fc1a4a7909f36>>
  * @lightSyntaxTransform
  */
 
@@ -22,6 +22,7 @@ export type UpdateDatasetDecisionEvaluatorInput = {
   scoringPolicy?: DecisionScoringPolicyInput | null;
 };
 export type EvaluatorInputMappingInput = {
+  descriptions?: any | null;
   literalMapping: any;
   pathMapping: any;
 };

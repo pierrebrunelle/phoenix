@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<35ba3ed3fb89894db173e623d6866eff>>
+ * @generated SignedSource<<11de7fc59a8b18bc327a4f3809161cf9>>
  * @lightSyntaxTransform
  */
 
@@ -252,6 +252,7 @@ export type FreeformAnnotationConfigInput = {
   upperBound?: number | null;
 };
 export type EvaluatorInputMappingInput = {
+  descriptions?: any | null;
   literalMapping: any;
   pathMapping: any;
 };

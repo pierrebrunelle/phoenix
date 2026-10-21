@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<10c9e6ab7fa5e9d1bca3af2cd52a29e9>>
+ * @generated SignedSource<<53147df53ef5c5e90a3546495fd0220a>>
  * @lightSyntaxTransform
  */
 
@@ -132,6 +132,7 @@ export type DecisionScaleScoringInput = {
   optimizationDirection?: OptimizationDirection;
 };
 export type EvaluatorInputMappingInput = {
+  descriptions?: any | null;
   literalMapping: any;
   pathMapping: any;
 };

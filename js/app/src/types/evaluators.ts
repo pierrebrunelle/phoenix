@@ -56,6 +56,8 @@ export type EvaluatorParams = {
 export type EvaluatorInputMapping = {
   literalMapping: Record<string, boolean | string | number>;
   pathMapping: Record<string, string>;
+  /** What each input should hold, keyed by input name. Not read at run time. */
+  descriptions?: Record<string, string>;
 };
 
 // Runtime tuple so the code-evaluator draft Zod schema derives its enum from this same source.

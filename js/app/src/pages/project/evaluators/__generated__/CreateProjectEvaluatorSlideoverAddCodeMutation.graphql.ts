@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<e945118873577441ac5b0ac399cf800f>>
+ * @generated SignedSource<<fd7f130fd513885615f51b074c61cbfe>>
  * @lightSyntaxTransform
  */
 
@@ -22,6 +22,7 @@ export type AddProjectCodeEvaluatorInput = {
   samplingRate: number;
 };
 export type EvaluatorInputMappingInput = {
+  descriptions?: any | null;
   literalMapping: any;
   pathMapping: any;
 };

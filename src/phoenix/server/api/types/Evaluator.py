@@ -275,6 +275,8 @@ class EvaluatorInputMapping:
     """Direct key-value mappings to evaluator inputs."""
     path_mapping: JSON
     """JSONPath expressions to extract values from the evaluation context."""
+    descriptions: JSON
+    """What each evaluator input should hold, keyed by input name."""
 
 
 BuiltInEvaluatorOutputConfig: TypeAlias = Annotated[
@@ -362,6 +364,24 @@ class Evaluator(Node):
             await info.context.data_loaders.dataset_evaluators_by_evaluator.load(self.id)
         )
         return [DatasetEvaluator(id=de.id, db_record=de) for de in dataset_evaluator_records]
+
+    @strawberry.field(  # type: ignore[untyped-decorator]
+        description="The project evaluators that run this evaluator, most recently updated first."
+    )
+    async def project_evaluators(
+        self,
+        info: Info[Context, None],
+    ) -> list["ProjectEvaluator"]:
+        async with info.context.db.read() as session:
+            records = await session.scalars(
+                sa.select(models.ProjectEvaluator)
+                .where(models.ProjectEvaluator.evaluator_id == self.id)
+                .order_by(
+                    models.ProjectEvaluator.updated_at.desc(),
+                    models.ProjectEvaluator.id.desc(),
+                )
+            )
+            return [ProjectEvaluator(id=record.id, db_record=record) for record in records]
 
 
 @strawberry.type
@@ -500,6 +520,7 @@ class CodeEvaluator(Evaluator, Node):
         return EvaluatorInputMapping(
             literal_mapping=JSON(val.literal_mapping),
             path_mapping=JSON(val.path_mapping),
+            descriptions=JSON(val.descriptions),
         )
 
     @strawberry.field
@@ -1364,6 +1385,7 @@ class DatasetEvaluator(Node):
         return EvaluatorInputMapping(
             literal_mapping=JSON(input_mapping.literal_mapping),
             path_mapping=JSON(input_mapping.path_mapping),
+            descriptions=JSON(input_mapping.descriptions),
         )
 
     @strawberry.field
@@ -1670,10 +1692,13 @@ class ProjectEvaluator(Node):
             if isinstance(evaluator, models.CodeEvaluator):
                 input_mapping = evaluator.input_mapping
         if input_mapping is None:
-            return EvaluatorInputMapping(literal_mapping=JSON({}), path_mapping=JSON({}))
+            return EvaluatorInputMapping(
+                literal_mapping=JSON({}), path_mapping=JSON({}), descriptions=JSON({})
+            )
         return EvaluatorInputMapping(
             literal_mapping=JSON(input_mapping.literal_mapping),
             path_mapping=JSON(input_mapping.path_mapping),
+            descriptions=JSON(input_mapping.descriptions),
         )
 
     @strawberry.field
