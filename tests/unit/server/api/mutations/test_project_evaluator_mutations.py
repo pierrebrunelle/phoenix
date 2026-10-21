@@ -950,6 +950,7 @@ async def test_project_llm_evaluator_input_descriptions_round_trip(
                 models.ProjectEvaluator.__table__.c.id == project_evaluator_id
             )
         )
+    assert stored is not None
     assert "descriptions" not in stored
 
 

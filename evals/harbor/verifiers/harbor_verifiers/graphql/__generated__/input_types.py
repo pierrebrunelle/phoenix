@@ -214,6 +214,7 @@ class EvaluatorDefinitionInput(BaseModel):
 class EvaluatorInputMappingInput(BaseModel):
     literal_mapping: Any = Field(alias="literalMapping")
     path_mapping: Any = Field(alias="pathMapping")
+    descriptions: Optional[Any] = None
 
 
 class EvaluatorPreviewItemInput(BaseModel):
